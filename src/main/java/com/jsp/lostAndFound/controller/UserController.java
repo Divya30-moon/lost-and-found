@@ -14,8 +14,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jsp.lostAndFound.dto.RegisterRequestDTO;
+import com.jsp.lostAndFound.dto.UpdateUserRequestDTO;
 import com.jsp.lostAndFound.dto.UserDTO;
 import com.jsp.lostAndFound.service.UserService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
@@ -29,7 +32,7 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(
-            @RequestBody RegisterRequestDTO registerRequestDTO) {
+            @RequestBody  @Valid RegisterRequestDTO registerRequestDTO) {
 
         UserDTO createdUser = userService.createUser(registerRequestDTO);
 
@@ -55,9 +58,9 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(
             @PathVariable Long id,
-            @RequestBody UserDTO userDTO) {
+            @RequestBody @Valid UpdateUserRequestDTO updateUserRequestDTO) {
 
-        UserDTO updatedUser = userService.updateUser(id, userDTO);
+        UserDTO updatedUser = userService.updateUser(id, updateUserRequestDTO);
 
         return ResponseEntity.ok(updatedUser);
     }

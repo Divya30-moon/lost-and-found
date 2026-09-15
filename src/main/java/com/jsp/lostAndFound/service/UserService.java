@@ -3,6 +3,7 @@ package com.jsp.lostAndFound.service;
 import java.util.List;
 
 import com.jsp.lostAndFound.dto.RegisterRequestDTO;
+import com.jsp.lostAndFound.dto.UpdateUserRequestDTO;
 import com.jsp.lostAndFound.dto.UserDTO;
 
 public interface UserService {
@@ -13,7 +14,7 @@ public interface UserService {
 
     List<UserDTO> getAllUsers();
 
-    UserDTO updateUser(Long id, UserDTO userDTO);
+    UserDTO updateUser(Long id, UpdateUserRequestDTO updateUserRequestDTO);
 
     void deleteUser(Long id);
 }

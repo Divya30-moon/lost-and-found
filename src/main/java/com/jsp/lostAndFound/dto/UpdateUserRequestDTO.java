@@ -3,9 +3,8 @@ package com.jsp.lostAndFound.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
-public class RegisterRequestDTO {
+public class UpdateUserRequestDTO {
 
     @NotBlank(message = "Name is required")
     private String name;
@@ -14,21 +13,19 @@ public class RegisterRequestDTO {
     @Email(message = "Enter a valid email")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must contain at least 8 characters")
-    private String password;
-
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^[6-9][0-9]{9}$", message = "Enter a valid 10-digit phone number")
+    @Pattern(
+        regexp = "^[6-9][0-9]{9}$",
+        message = "Enter a valid 10-digit phone number"
+    )
     private String phone;
 
-    public RegisterRequestDTO() {
+    public UpdateUserRequestDTO() {
     }
 
-    public RegisterRequestDTO(String name, String email, String password, String phone) {
+    public UpdateUserRequestDTO(String name, String email, String phone) {
         this.name = name;
         this.email = email;
-        this.password = password;
         this.phone = phone;
     }
 
@@ -46,14 +43,6 @@ public class RegisterRequestDTO {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public String getPhone() {

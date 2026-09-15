@@ -7,8 +7,11 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.jsp.lostAndFound.dto.RegisterRequestDTO;
+import com.jsp.lostAndFound.dto.UpdateUserRequestDTO;
 import com.jsp.lostAndFound.dto.UserDTO;
 import com.jsp.lostAndFound.entity.User;
+import com.jsp.lostAndFound.exception.EmailAlreadyExistsException;
+import com.jsp.lostAndFound.exception.UserNotFoundException;
 import com.jsp.lostAndFound.repository.UserRepository;
 
 @Service
@@ -22,6 +25,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO createUser(RegisterRequestDTO registerRequestDTO) {
+
+        if (userRepository.existsByEmail(registerRequestDTO.getEmail())) {
+            throw new EmailAlreadyExistsException(
+                    "Email already registered: " + registerRequestDTO.getEmail()
+            );
+        }
 
         User user = new User();
 
@@ -41,7 +50,9 @@ public class UserServiceImpl implements UserService {
     public UserDTO getUserById(Long id) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with id: " + id
+                		));
 
         return convertToDTO(user);
     }
@@ -57,25 +68,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
+    public UserDTO updateUser(Long id, UpdateUserRequestDTO updateUserRequestDTO) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with id: " + id
+                ));
 
-        user.setName(userDTO.getName());
-        user.setEmail(userDTO.getEmail());
-        user.setPhone(userDTO.getPhone());
+        String newEmail = updateUserRequestDTO.getEmail();
+
+        if (!user.getEmail().equalsIgnoreCase(newEmail)
+                && userRepository.existsByEmail(newEmail)) {
+
+            throw new EmailAlreadyExistsException(
+                    "Email already registered: " + newEmail
+            );
+        }
+
+        user.setName(updateUserRequestDTO.getName());
+        user.setEmail(newEmail);
+        user.setPhone(updateUserRequestDTO.getPhone());
 
         User updatedUser = userRepository.save(user);
 
         return convertToDTO(updatedUser);
     }
-
+    
     @Override
     public void deleteUser(Long id) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException(
+                        "User not found with id: " + id
+                		));
 
         userRepository.delete(user);
     }
