@@ -48,4 +48,26 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
+    
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryNotFound(
+            CategoryNotFoundException exception) {
+
+        Map<String, String> error = new HashMap<>();
+
+        error.put("message", exception.getMessage());
+
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CategoryAlreadyExistsException.class)
+    public ResponseEntity<Map<String, String>> handleCategoryAlreadyExists(
+            CategoryAlreadyExistsException exception) {
+
+        Map<String, String> error = new HashMap<>();
+
+        error.put("message", exception.getMessage());
+
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
 }
