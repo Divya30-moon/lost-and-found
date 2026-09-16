@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.jsp.lostAndFound.dto.RecoveryRequestRequestDTO;
 import com.jsp.lostAndFound.dto.RecoveryRequestResponseDTO;
@@ -71,9 +72,7 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
         );
 
         validateItems(lostItem, foundItem);
-
         validateRequester(requester, lostItem);
-
         validateDuplicateRequest(lostItem.getId());
 
         LocalDateTime now = LocalDateTime.now();
@@ -233,9 +232,12 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // ACCEPT REQUEST
     // Finder only
     // PENDING → ACCEPTED
+    // Lost Item  → MATCHED
+    // Found Item → CLAIMED
     // =========================================================
 
     @Override
+    @Transactional
     public RecoveryRequestResponseDTO acceptRequest(
             Long requestId,
             Long finderId) {
@@ -253,6 +255,15 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
         request.setStatus(RecoveryRequestStatus.ACCEPTED);
         request.setUpdatedAt(LocalDateTime.now());
 
+        Item lostItem = request.getLostItem();
+        Item foundItem = request.getFoundItem();
+
+        lostItem.setStatus(ItemStatus.MATCHED);
+        foundItem.setStatus(ItemStatus.CLAIMED);
+
+        itemRepository.save(lostItem);
+        itemRepository.save(foundItem);
+
         RecoveryRequest updatedRequest =
                 recoveryRequestRepository.save(request);
 
@@ -263,9 +274,11 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // REJECT REQUEST
     // Finder only
     // PENDING → REJECTED
+    // Items remain ACTIVE
     // =========================================================
 
     @Override
+    @Transactional
     public RecoveryRequestResponseDTO rejectRequest(
             Long requestId,
             Long finderId) {
@@ -293,9 +306,11 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // CANCEL REQUEST
     // Owner only
     // PENDING → CANCELLED
+    // Items remain ACTIVE
     // =========================================================
 
     @Override
+    @Transactional
     public RecoveryRequestResponseDTO cancelRequest(
             Long requestId,
             Long ownerId) {
@@ -326,6 +341,7 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // =========================================================
 
     @Override
+    @Transactional
     public RecoveryRequestResponseDTO markAsReturned(
             Long requestId,
             Long finderId) {
@@ -353,9 +369,12 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // COMPLETE REQUEST
     // Owner only
     // RETURNED → COMPLETED
+    // Lost Item  → RECOVERED
+    // Found Item → CLOSED
     // =========================================================
 
     @Override
+    @Transactional
     public RecoveryRequestResponseDTO completeRequest(
             Long requestId,
             Long ownerId) {
@@ -372,6 +391,15 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
 
         request.setStatus(RecoveryRequestStatus.COMPLETED);
         request.setUpdatedAt(LocalDateTime.now());
+
+        Item lostItem = request.getLostItem();
+        Item foundItem = request.getFoundItem();
+
+        lostItem.setStatus(ItemStatus.RECOVERED);
+        foundItem.setStatus(ItemStatus.CLOSED);
+
+        itemRepository.save(lostItem);
+        itemRepository.save(foundItem);
 
         RecoveryRequest updatedRequest =
                 recoveryRequestRepository.save(request);
