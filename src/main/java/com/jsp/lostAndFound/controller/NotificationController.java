@@ -15,34 +15,9 @@ public class NotificationController {
 
     private final NotificationService notificationService;
 
-    public NotificationController(
-            NotificationService notificationService) {
-
+    public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;
     }
-
-    // =========================================================
-    // CREATE NOTIFICATION
-    // =========================================================
-
-    @PostMapping
-    public ResponseEntity<NotificationResponseDTO> createNotification(
-            @RequestParam Long userId,
-            @RequestParam String message,
-            @RequestParam NotificationType type) {
-
-        return ResponseEntity.ok(
-                notificationService.createNotification(
-                        userId,
-                        message,
-                        type
-                )
-        );
-    }
-
-    // =========================================================
-    // GET ALL NOTIFICATIONS FOR USER
-    // =========================================================
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<NotificationResponseDTO>> getNotificationsForUser(
@@ -53,10 +28,6 @@ public class NotificationController {
         );
     }
 
-    // =========================================================
-    // GET UNREAD NOTIFICATIONS
-    // =========================================================
-
     @GetMapping("/user/{userId}/unread")
     public ResponseEntity<List<NotificationResponseDTO>> getUnreadNotifications(
             @PathVariable Long userId) {
@@ -65,10 +36,6 @@ public class NotificationController {
                 notificationService.getUnreadNotifications(userId)
         );
     }
-
-    // =========================================================
-    // GET UNREAD COUNT
-    // =========================================================
 
     @GetMapping("/user/{userId}/unread/count")
     public ResponseEntity<Long> getUnreadCount(
@@ -79,20 +46,13 @@ public class NotificationController {
         );
     }
 
-    // =========================================================
-    // MARK NOTIFICATION AS READ
-    // =========================================================
-
     @PutMapping("/{notificationId}/read")
     public ResponseEntity<NotificationResponseDTO> markAsRead(
             @PathVariable Long notificationId,
             @RequestParam Long userId) {
 
         return ResponseEntity.ok(
-                notificationService.markAsRead(
-                        notificationId,
-                        userId
-                )
+                notificationService.markAsRead(notificationId, userId)
         );
     }
 }
