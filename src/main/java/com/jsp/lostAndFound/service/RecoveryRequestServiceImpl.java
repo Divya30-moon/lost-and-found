@@ -11,6 +11,7 @@ import com.jsp.lostAndFound.dto.RecoveryRequestResponseDTO;
 import com.jsp.lostAndFound.entity.Item;
 import com.jsp.lostAndFound.entity.ItemStatus;
 import com.jsp.lostAndFound.entity.ItemType;
+import com.jsp.lostAndFound.entity.NotificationType;
 import com.jsp.lostAndFound.entity.RecoveryRequest;
 import com.jsp.lostAndFound.entity.RecoveryRequestStatus;
 import com.jsp.lostAndFound.entity.User;
@@ -26,15 +27,18 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     private final RecoveryRequestRepository recoveryRequestRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public RecoveryRequestServiceImpl(
             RecoveryRequestRepository recoveryRequestRepository,
             ItemRepository itemRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            NotificationService notificationService) {
 
         this.recoveryRequestRepository = recoveryRequestRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     // =========================================================
@@ -88,6 +92,15 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
 
         RecoveryRequest savedRequest =
                 recoveryRequestRepository.save(recoveryRequest);
+
+        // Notify the finder
+        Long finderId = foundItem.getReportedBy().getId();
+
+        notificationService.createNotification(
+                finderId,
+                "Someone has submitted a recovery request for your found item.",
+                NotificationType.RECOVERY_REQUEST_CREATED
+        );
 
         return convertToResponseDTO(savedRequest);
     }
@@ -267,6 +280,15 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
         RecoveryRequest updatedRequest =
                 recoveryRequestRepository.save(request);
 
+        // Notify the owner
+        Long ownerId = lostItem.getReportedBy().getId();
+
+        notificationService.createNotification(
+                ownerId,
+                "The finder has accepted your recovery request.",
+                NotificationType.RECOVERY_REQUEST_ACCEPTED
+        );
+
         return convertToResponseDTO(updatedRequest);
     }
 
@@ -274,7 +296,6 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // REJECT REQUEST
     // Finder only
     // PENDING → REJECTED
-    // Items remain ACTIVE
     // =========================================================
 
     @Override
@@ -306,7 +327,6 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     // CANCEL REQUEST
     // Owner only
     // PENDING → CANCELLED
-    // Items remain ACTIVE
     // =========================================================
 
     @Override
@@ -362,6 +382,17 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
         RecoveryRequest updatedRequest =
                 recoveryRequestRepository.save(request);
 
+        Item lostItem = request.getLostItem();
+
+        // Notify the owner
+        Long ownerId = lostItem.getReportedBy().getId();
+
+        notificationService.createNotification(
+                ownerId,
+                "The finder has marked your item as returned.",
+                NotificationType.ITEM_RETURNED
+        );
+
         return convertToResponseDTO(updatedRequest);
     }
 
@@ -403,6 +434,15 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
 
         RecoveryRequest updatedRequest =
                 recoveryRequestRepository.save(request);
+
+        // Notify the finder
+        Long finderId = foundItem.getReportedBy().getId();
+
+        notificationService.createNotification(
+                finderId,
+                "The owner has confirmed that the recovery is completed.",
+                NotificationType.RECOVERY_COMPLETED
+        );
 
         return convertToResponseDTO(updatedRequest);
     }
@@ -483,7 +523,7 @@ public class RecoveryRequestServiceImpl implements RecoveryRequestService {
     }
 
     // =========================================================
-    // CONVERT ENTITY → RESPONSE DTO
+    // CONVERT ENTITY → DTO
     // =========================================================
 
     private RecoveryRequestResponseDTO convertToResponseDTO(
