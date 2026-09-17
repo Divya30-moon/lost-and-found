@@ -72,4 +72,12 @@ public class UserController {
 
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getCurrentUser() {
+
+        return ResponseEntity.ok(
+                userService.getCurrentUser()
+        );
+    }
 }

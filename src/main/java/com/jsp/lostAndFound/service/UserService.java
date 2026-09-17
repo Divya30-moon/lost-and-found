@@ -8,13 +8,15 @@ import com.jsp.lostAndFound.dto.UserDTO;
 
 public interface UserService {
 
-	UserDTO createUser(RegisterRequestDTO registerRequestDTO);
+    UserDTO createUser(RegisterRequestDTO dto);
 
     UserDTO getUserById(Long id);
 
     List<UserDTO> getAllUsers();
 
-    UserDTO updateUser(Long id, UpdateUserRequestDTO updateUserRequestDTO);
+    UserDTO updateUser(Long id, UpdateUserRequestDTO dto);
 
     void deleteUser(Long id);
+
+    UserDTO getCurrentUser();
 }

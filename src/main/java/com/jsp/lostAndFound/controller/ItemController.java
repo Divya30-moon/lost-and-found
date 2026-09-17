@@ -35,13 +35,11 @@ public class ItemController {
 
     @PostMapping
     public ResponseEntity<ItemResponseDTO> createItem(
-            @RequestBody @Valid ItemRequestDTO itemRequestDTO) {
+            @Valid @RequestBody ItemRequestDTO dto) {
 
-        ItemResponseDTO createdItem =
-                itemService.createItem(itemRequestDTO);
-
-        return new ResponseEntity<>(
-                createdItem, HttpStatus.CREATED);
+        return ResponseEntity.ok(
+                itemService.createItem(dto)
+        );
     }
 
     @GetMapping("/{id}")

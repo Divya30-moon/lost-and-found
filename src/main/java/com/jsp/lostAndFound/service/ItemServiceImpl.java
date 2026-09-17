@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.jsp.lostAndFound.config.SecurityUtil;
 import com.jsp.lostAndFound.dto.ItemRequestDTO;
 import com.jsp.lostAndFound.dto.ItemResponseDTO;
 import com.jsp.lostAndFound.dto.UpdateItemRequestDTO;
@@ -27,47 +28,63 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final SecurityUtil securityUtil;
 
     public ItemServiceImpl(ItemRepository itemRepository,
-                           UserRepository userRepository,
-                           CategoryRepository categoryRepository) {
+            UserRepository userRepository,
+            CategoryRepository categoryRepository,
+            SecurityUtil securityUtil) {
 
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
-        this.categoryRepository = categoryRepository;
-    }
+this.itemRepository = itemRepository;
+this.userRepository = userRepository;
+this.categoryRepository = categoryRepository;
+this.securityUtil = securityUtil;
+}
 
     @Override
-    public ItemResponseDTO createItem(ItemRequestDTO itemRequestDTO) {
+    public ItemResponseDTO createItem(ItemRequestDTO dto) {
 
-        validateEventDate(itemRequestDTO.getEventDate());
+        if (dto.getEventDate().isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException(
+                    "Event date cannot be in the future"
+            );
+        }
 
-        User user = userRepository.findById(itemRequestDTO.getReportedById())
-                .orElseThrow(() -> new UserNotFoundException(
-                        "User not found with id: "
-                                + itemRequestDTO.getReportedById()
-                ));
+        // Get currently authenticated user's email from JWT
+        String email = securityUtil.getCurrentUserEmail();
 
-        Category category = categoryRepository
-                .findById(itemRequestDTO.getCategoryId())
-                .orElseThrow(() -> new CategoryNotFoundException(
-                        "Category not found with id: "
-                                + itemRequestDTO.getCategoryId()
-                ));
+        // Find the authenticated user from database
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "Authenticated user not found"
+                        )
+                );
+
+        Category category = categoryRepository.findById(dto.getCategoryId())
+                .orElseThrow(() ->
+                        new CategoryNotFoundException(
+                                "Category with id "
+                                + dto.getCategoryId()
+                                + " not found"
+                        )
+                );
 
         Item item = new Item();
 
-        item.setTitle(itemRequestDTO.getTitle());
-        item.setDescription(itemRequestDTO.getDescription());
-        item.setItemType(itemRequestDTO.getItemType());
+        item.setTitle(dto.getTitle());
+        item.setDescription(dto.getDescription());
+        item.setItemType(dto.getItemType());
         item.setCategory(category);
-        item.setColor(itemRequestDTO.getColor());
-        item.setLocation(itemRequestDTO.getLocation());
-        item.setEventDate(itemRequestDTO.getEventDate());
+        item.setColor(dto.getColor());
+        item.setLocation(dto.getLocation());
+        item.setEventDate(dto.getEventDate());
 
-        // Server-controlled fields
-        item.setStatus(ItemStatus.ACTIVE);
+        // Security improvement:
+        // reportedBy comes from authenticated user, not request data.
         item.setReportedBy(user);
+
+        item.setStatus(ItemStatus.ACTIVE);
         item.setCreatedAt(LocalDateTime.now());
 
         Item savedItem = itemRepository.save(item);
